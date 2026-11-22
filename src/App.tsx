@@ -2,9 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   GitCompare,
+  Mail,
   Moon,
   Play,
   SlidersHorizontal,
+  Sparkles,
   Square,
   Sun,
   Waves,
@@ -38,6 +40,7 @@ import { ChaosLabPanel } from './components/ChaosLabPanel';
 import { ScenariosPanel } from './components/ScenariosPanel';
 import { DiffAndCiPanel } from './components/DiffAndCiPanel';
 import { AutoDemoBanner, AutoDemoState } from './components/AutoDemoBanner';
+import { ProUpgradeModal } from './components/ProUpgradeModal';
 import { buildJsonReport, triggerFileDownload } from './engine/exporters';
 
 const INITIAL_DEMO_STATE: AutoDemoState = {
@@ -136,6 +139,7 @@ export default function App() {
   const [demoState, setDemoState] = useState<AutoDemoState>(INITIAL_DEMO_STATE);
   const [highlightWaterfall, setHighlightWaterfall] = useState(false);
   const [highlightScorecard, setHighlightScorecard] = useState(false);
+  const [proModalOpen, setProModalOpen] = useState(false);
   const demoRunIdRef = useRef(0);
   const demoTimerRef = useRef<number | null>(null);
   const autoDemoUrlTriggeredRef = useRef(false);
@@ -755,7 +759,7 @@ export default function App() {
           </a>
 
           {/* 4 Spacious Workflow Navigation Tabs */}
-          <nav className="hidden lg:flex items-center gap-1.5 h-full">
+          <nav className="hidden xl:flex items-center gap-1 h-full">
             {NAV_TABS.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -764,7 +768,7 @@ export default function App() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                     active
                       ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-[#151B28] dark:hover:text-slate-100'
@@ -782,20 +786,23 @@ export default function App() {
             })}
           </nav>
 
-          {/* Right Header Controls: Prominent Primary Watch Auto-Demo CTA + Light/Dark Toggle + Quick Run */}
+          {/* Right Header Controls: Book QA Audit + Upgrade to Pro + Theme Toggle + Watch Auto-Demo */}
           <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="mailto:lakshya2008sharma2008@gmail.com?subject=VoxBench%20Voice%20AI%20Audit"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#11151E] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#151B28] transition-colors whitespace-nowrap shrink-0"
+            >
+              <Mail className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              Book QA Audit
+            </a>
+
             <button
               type="button"
-              disabled={isRunning}
-              onClick={() => void runParallelChaosSuite(concurrency)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium border border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#11151E] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#151B28] disabled:opacity-60 transition-colors whitespace-nowrap shrink-0"
+              onClick={() => setProModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-indigo-200 dark:border-indigo-500/40 bg-indigo-50/80 dark:bg-indigo-500/15 text-[#4F46E5] dark:text-indigo-300 hover:bg-indigo-100/80 dark:hover:bg-indigo-500/25 transition-colors whitespace-nowrap shrink-0"
             >
-              {isRunning ? (
-                <Activity className="w-3.5 h-3.5 animate-spin text-[#4F46E5]" />
-              ) : (
-                <Play className="w-3.5 h-3.5 text-[#4F46E5] dark:text-indigo-400" />
-              )}
-              {isRunning ? `Running ${progressDone}/${progressTotal}` : 'Run Test Suite'}
+              <Sparkles className="w-3.5 h-3.5" />
+              Upgrade to Pro
             </button>
 
             <button
@@ -812,7 +819,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => stopAutoDemo(false)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-sm transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-sm transition-colors whitespace-nowrap shrink-0"
               >
                 <Square className="w-3.5 h-3.5" />
                 Stop Demo
@@ -821,7 +828,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => void startAutoDemo(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white hover:bg-[#4338CA] shadow-sm transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#4F46E5] text-white hover:bg-[#4338CA] shadow-sm transition-colors whitespace-nowrap shrink-0"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 Watch Auto-Demo
@@ -832,34 +839,40 @@ export default function App() {
       </header>
 
       {/* Responsive Mobile / Tablet Tab Bar */}
-      <div className="lg:hidden flex items-center gap-1 overflow-x-auto border-b border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#0D1017] px-4 py-2">
-        {NAV_TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 ${
-                active
-                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {tab.label}
-            </button>
-          );
-        })}
+      <div className="xl:hidden flex items-center justify-between gap-2 overflow-x-auto border-b border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#0D1017] px-4 py-2">
+        <div className="flex items-center gap-1">
+          {NAV_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 ${
+                  active
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300'
+                    : 'text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <a
+          href="mailto:lakshya2008sharma2008@gmail.com?subject=VoxBench%20Voice%20AI%20Audit"
+          className="sm:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-200 dark:border-[#1E2536] text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0"
+        >
+          <Mail className="w-3 h-3" />
+          Book QA Audit
+        </a>
       </div>
 
       {/* Main Centered Executive SaaS Viewport */}
-      <main
-        className={`flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 ${
-          demoState.active || demoState.completed ? 'pb-40' : ''
-        }`}
-      >
+      <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Executive Self-Explanatory Hero Header, Audience Strip & 3-Step Horizontal Explainer */}
         <section className="mb-6 rounded-xl border border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#11151E] shadow-sm overflow-hidden">
           <div className="p-5 sm:p-6 space-y-3">
@@ -1030,6 +1043,42 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Minimal Founder & Contact Footer */}
+      <footer
+        className={`border-t border-slate-200 dark:border-[#1E2536] bg-white/80 dark:bg-[#0D1017]/80 ${
+          demoState.active || demoState.completed ? 'pb-36' : ''
+        }`}
+      >
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+          <span>Built by Lakshya Sharma</span>
+          <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</span>
+          <span>
+            GitHub:{' '}
+            <a
+              href="https://github.com/Lakshya-dev80/voxbench"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-700 dark:text-slate-300 hover:text-[#4F46E5] dark:hover:text-indigo-400 transition-colors underline-offset-2 hover:underline"
+            >
+              github.com/Lakshya-dev80/voxbench
+            </a>
+          </span>
+          <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">•</span>
+          <span>
+            Contact:{' '}
+            <a
+              href="mailto:lakshya2008sharma2008@gmail.com"
+              className="text-slate-700 dark:text-slate-300 hover:text-[#4F46E5] dark:hover:text-indigo-400 transition-colors underline-offset-2 hover:underline"
+            >
+              lakshya2008sharma2008@gmail.com
+            </a>
+          </span>
+        </div>
+      </footer>
+
+      {/* Pro Upgrade Comparison Modal */}
+      <ProUpgradeModal open={proModalOpen} onClose={() => setProModalOpen(false)} />
 
       {/* Sleek Floating Live Walkthrough Banner */}
       <AutoDemoBanner
