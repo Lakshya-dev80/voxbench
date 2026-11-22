@@ -1,0 +1,6 @@
+{
+  "name": "VoxBench",
+  "description": "Developer-first Voice AI Chaos Engineering & Automated QA Platform with real Web Audio DSP, multi-track VAD waterfall, deterministic assertions, and CI/CD regression diffing.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
