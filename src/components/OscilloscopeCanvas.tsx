@@ -8,6 +8,7 @@ interface OscilloscopeCanvasProps {
   isPlaying: boolean;
   auditionMode: 'clean' | 'degraded';
   isDark: boolean;
+  demoAnimate?: boolean;
 }
 
 export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
@@ -16,6 +17,7 @@ export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
   isPlaying,
   auditionMode,
   isDark,
+  demoAnimate = false,
 }) => {
   const scopeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const specCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -224,12 +226,26 @@ export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
           sCtx.fillRect(i * stepX, (sh - h) / 2, Math.max(1.5, stepX - 1.2), h);
         }
 
-        // Deterministic DFT Frequency Preview from real PCM buffer
+        // Animated playhead sweep during Auto-Demo
+        const sweepProgress = demoAnimate ? ((performance.now() % 4200) / 4200) : 0;
+        if (demoAnimate) {
+          sCtx.strokeStyle = palette.amber;
+          sCtx.lineWidth = 2;
+          sCtx.beginPath();
+          sCtx.moveTo(sweepProgress * sw, 0);
+          sCtx.lineTo(sweepProgress * sw, sh);
+          sCtx.stroke();
+        }
+
+        // Deterministic DFT Frequency Preview from real PCM buffer (moves with playhead during demo)
         const pcm = auditionMode === 'clean' ? dspResult.cleanPcm : dspResult.degradedPcm;
         const sr = dspResult.sampleRate;
         const barCount = 58;
-        const sampleWindow = Math.min(pcm.length, 2048);
-        const startIdx = Math.floor(pcm.length * 0.25);
+        const sampleWindow = Math.min(pcm.length, 1024);
+        const maxStart = Math.max(0, pcm.length - sampleWindow - 1);
+        const startIdx = demoAnimate
+          ? Math.floor(sweepProgress * maxStart)
+          : Math.floor(pcm.length * 0.25);
         const barW = fw / barCount;
 
         for (let b = 0; b < barCount; b++) {
@@ -282,7 +298,7 @@ export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
       sCtx.restore();
       fCtx.restore();
 
-      if (isPlaying) {
+      if (isPlaying || demoAnimate) {
         rafId = window.requestAnimationFrame(renderFrame);
       }
     };
@@ -291,7 +307,7 @@ export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
     return () => {
       if (rafId) window.cancelAnimationFrame(rafId);
     };
-  }, [dspResult, audioController, isPlaying, auditionMode, isDark]);
+  }, [dspResult, audioController, isPlaying, auditionMode, isDark, demoAnimate]);
 
   return (
     <div className="space-y-4">
@@ -301,7 +317,7 @@ export const OscilloscopeCanvas: React.FC<OscilloscopeCanvasProps> = ({
             Waveform Oscilloscope
           </span>
           <span className="text-[11px] font-mono tabular-nums text-slate-500 dark:text-slate-400">
-            {isPlaying
+            {isPlaying || demoAnimate
               ? 'Live Analyser · 2048 FFT'
               : auditionMode === 'clean'
                 ? 'Clean Original (Emerald)'

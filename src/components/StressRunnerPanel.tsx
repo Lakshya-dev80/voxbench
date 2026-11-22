@@ -3,6 +3,7 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
+  Download,
   Play,
   Save,
   XCircle,
@@ -43,6 +44,10 @@ interface StressRunnerPanelProps {
   onRunSingleScenario: () => void;
   onRunParallelSuite: (concurrency: 1 | 5 | 10 | 25) => void;
   onQuickSaveSnapshot: () => void;
+  onExportReport?: () => void;
+  qaScore?: number | null;
+  highlightWaterfall?: boolean;
+  highlightScorecard?: boolean;
 }
 
 export const StressRunnerPanel: React.FC<StressRunnerPanelProps> = ({
@@ -69,6 +74,10 @@ export const StressRunnerPanel: React.FC<StressRunnerPanelProps> = ({
   onRunSingleScenario,
   onRunParallelSuite,
   onQuickSaveSnapshot,
+  onExportReport,
+  qaScore = null,
+  highlightWaterfall = false,
+  highlightScorecard = false,
 }) => {
   const histogram = useMemo(() => {
     const calls = currentRun?.calls ?? [];
@@ -359,34 +368,79 @@ export const StressRunnerPanel: React.FC<StressRunnerPanelProps> = ({
       </section>
 
       {/* Multi-Track Call Timeline Underneath KPI Cards */}
-      <CallWaterfall
-        call={selectedCall}
-        dspResult={dspResult}
-        audioController={audioController}
-      />
+      <div
+        id="call-waterfall-section"
+        className={`rounded-2xl transition-all duration-500 ${
+          highlightWaterfall
+            ? 'ring-2 ring-rose-500 ring-offset-4 ring-offset-[#F8FAFC] dark:ring-offset-[#090B10]'
+            : ''
+        }`}
+      >
+        <CallWaterfall
+          call={selectedCall}
+          dspResult={dspResult}
+          audioController={audioController}
+        />
+      </div>
 
-      {/* Assertion Diagnostics & Observed Transcript */}
+      {/* Assertion Diagnostics & Final QA Scorecard */}
       {selectedCall && (
-        <section className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <section
+          id="qa-scorecard-section"
+          className={`grid grid-cols-1 xl:grid-cols-12 gap-6 scroll-mt-24 rounded-2xl transition-all duration-500 ${
+            highlightScorecard
+              ? 'ring-2 ring-[#4F46E5] ring-offset-4 ring-offset-[#F8FAFC] dark:ring-offset-[#090B10]'
+              : ''
+          }`}
+        >
           <div className="xl:col-span-8 rounded-xl border border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#11151E] shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-[#1E2536] flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-[#1E2536] flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                  Deterministic Assertion Checks
+                  Final QA Scorecard & Deterministic Assertions
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Automated pass/fail verification for latency, barge-in halt, webhooks, and policy safety.
                 </p>
               </div>
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
-                  selectedCall.status === 'passed'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
-                    : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30'
-                }`}
-              >
-                {selectedCall.status === 'passed' ? 'All Checks Passed' : 'Failures Detected'}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {qaScore !== null && (
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-mono tabular-nums font-semibold border whitespace-nowrap ${
+                      qaScore >= 85
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                        : qaScore >= 70
+                          ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30'
+                          : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30'
+                    }`}
+                  >
+                    QA Score: {qaScore}/100
+                  </span>
+                )}
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${
+                    selectedCall.status === 'passed'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                      : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30'
+                  }`}
+                >
+                  {selectedCall.status === 'passed' ? 'All Checks Passed' : 'Failures Detected'}
+                </span>
+                {onExportReport && (
+                  <button
+                    type="button"
+                    onClick={onExportReport}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                      highlightScorecard
+                        ? 'bg-[#4F46E5] text-white hover:bg-[#4338CA] shadow-sm'
+                        : 'border border-slate-200 dark:border-[#1E2536] bg-white dark:bg-[#151B28] text-slate-700 dark:text-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Export QA Report
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-[#1E2536]">

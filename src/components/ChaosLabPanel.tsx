@@ -41,6 +41,7 @@ interface ChaosLabPanelProps {
   onUtteranceChange: (nextUtterance: string) => void;
   audioController: LiveAudioController;
   isDark: boolean;
+  demoAnimate?: boolean;
 }
 
 const NOISE_OPTIONS: Array<{ id: NoiseProfile; label: string; detail: string }> = [
@@ -63,6 +64,7 @@ export const ChaosLabPanel: React.FC<ChaosLabPanelProps> = ({
   onUtteranceChange,
   audioController,
   isDark,
+  demoAnimate = false,
 }) => {
   const [auditionMode, setAuditionMode] = useState<'clean' | 'degraded'>('degraded');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -554,7 +556,7 @@ export const ChaosLabPanel: React.FC<ChaosLabPanelProps> = ({
               <input
                 type="range"
                 min={0}
-                max={250}
+                max={400}
                 step={5}
                 value={chaos.jitterMs}
                 onChange={(e) => updateChaos({ jitterMs: Number(e.target.value) })}
@@ -698,6 +700,7 @@ export const ChaosLabPanel: React.FC<ChaosLabPanelProps> = ({
               isPlaying={isPlaying}
               auditionMode={auditionMode}
               isDark={isDark}
+              demoAnimate={demoAnimate}
             />
 
             {/* Measured Signal Summary Cards */}
